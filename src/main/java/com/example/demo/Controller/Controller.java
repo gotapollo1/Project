@@ -5,6 +5,8 @@ import com.example.demo.Model.*;
 import com.example.demo.Model.Process;
 import com.example.demo.Repository.*;
 import com.example.demo.Service.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.sun.xml.bind.v2.model.core.ID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -27,26 +29,31 @@ public class Controller {
     @Autowired
     private InputTransactionRepository inputTransactionRepository;
     @Autowired
-    ProcessByUserIDService processByUserIdService;
+    private ProcessByUserIDService processByUserIdService;
     @Autowired
-    ProcessInputRepository processInputRepository;
+    private ProcessInputRepository processInputRepository;
     @Autowired
-    UserProcessService userProcessService;
+    private UserProcessService userProcessService;
     @Autowired
-    ProcessInputService processInputService;
+    private ProcessInputService processInputService;
     @Autowired
-    InputTransactionService inputTransactionService;
+    private InputTransactionService inputTransactionService;
     @Autowired
-    ProcessOutputService processOutputService;
+    private ProcessOutputService processOutputService;
     @Autowired
-    AcademicService academicService;
+    private AcademicService academicService;
     @Autowired
-    OutputInputService outputInputService;
-
+    private OutputInputService outputInputService;
     @Autowired
-    AgencyProcessService agencyProcessService;
+    private AgencyProcessService agencyProcessService;
     @Autowired
-    AgencyRepository agencyRepository;
+    private AgencyRepository agencyRepository;
+    @Autowired
+    private NewsRepository newsRepository;
+    @Autowired
+    private NewsService newsService;
+    @Autowired
+    private OutputService outputService;
 
 
     @GetMapping("/user")
@@ -155,10 +162,10 @@ public class Controller {
         return outputInputService.getInputByOutputID(outputID);
     }
 
-    //ดู Transaction โดยเรียกจากวันที่ปัจจุบัน
-    @GetMapping("/transaction/now")
-    public List<GraphDataDto> getTransactionByDateNow(Integer outputID) {
-        return inputTransactionService.getTransactionByNow(outputID);
+    //ข้อมูลใต้กราฟ
+    @GetMapping("/graphData")
+    public List<GraphDataDto> getGraphData(@RequestParam Integer outputID) {
+        return inputTransactionService.getGraphData(outputID);
     }
 
     @GetMapping("/process/ByAgency")
@@ -173,6 +180,25 @@ public class Controller {
     public List<CheckInputDto2> getCheckInput(){
         return inputTransactionService.getCheckInput();
     }
-
+    @PostMapping("/addNews")
+    public News addNews(@RequestBody News news){
+        return newsService.addNews(news);
+    }
+    @DeleteMapping("/deleteNews")
+    public String deleteNew(@RequestParam Integer id){
+        return newsService.deleteNews(id);
+    }
+    @PostMapping("/updateNews")
+    public News updateNews(@RequestParam Integer id,@RequestBody News news){
+        return newsService.updateNews(id,news);
+    }
+    @GetMapping("/allNews")
+    public List<News> findAllNews(){
+        return newsRepository.findAll();
+    }
+    @PostMapping("/addOutput")
+    public Output addOutput(@RequestBody Output output){
+        return outputService.addOutput(output);
+    }
 }
 

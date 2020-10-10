@@ -14,6 +14,6 @@ import java.util.Optional;
 public interface ProcessInputRepository extends JpaRepository<ProcessInput,Integer> {
     List<ProcessInput> findByProcessId(Integer processID);
     List<ProcessInput>findByProcess(Process process);
-    List<ProcessInput>findByInput(ProcessInput processInput);
+    List<ProcessInput>findByInputIdIn(List<Integer> idList);
     Optional<ProcessInput>findById(Integer Id);
 }

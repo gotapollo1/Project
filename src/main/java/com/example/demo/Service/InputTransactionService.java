@@ -5,11 +5,17 @@ import com.example.demo.Dto.CheckInputDto2;
 import com.example.demo.Dto.GraphDataDto;
 import com.example.demo.Dto.TransactionProcessDto;
 import com.example.demo.Model.*;
+import com.example.demo.Model.Process;
 import com.example.demo.Repository.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.hibernate.annotations.Check;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.xml.crypto.Data;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +23,12 @@ import java.util.Optional;
 
 @Service
 public class InputTransactionService {
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private LocalDate ldn = LocalDate.now();
+    private Integer Month = ldn.getMonthValue();
+    private Integer year = ldn.getYear();
+
     DateTimeFormatter formatter;
     private List<InputTransaction> inputTransactionsList = new ArrayList<>();
     @Autowired
@@ -40,12 +52,12 @@ public class InputTransactionService {
 
 
 
-    LocalDate ld = LocalDate.now();
+   // LocalDate ld = LocalDate.now();
 
     public InputTransaction addInput(InputTransaction inputTransaction){
         inputTransactionsList.add(inputTransaction);
-        inputTransaction.setJobDate(ld);
-        inputTransaction.setUpdateDate(ld);
+        inputTransaction.setJobDate(ldn);
+        inputTransaction.setUpdateDate(ldn);
         return inputTransactionRepository.save(inputTransaction);
     }
     public InputTransaction updateInput(Integer id, InputTransaction inputTransaction){
@@ -53,7 +65,7 @@ public class InputTransactionService {
                 existingInput.setProcessInputId(inputTransaction.getProcessInputId());
                 existingInput.setKeyID(inputTransaction.getKeyID());
                 existingInput.setValue(inputTransaction.getValue());
-                existingInput.setUpdateDate(ld);
+                existingInput.setUpdateDate(ldn);
                 existingInput.setUpdateBY(inputTransaction.getUpdateBY());
 
         return inputTransactionRepository.save(existingInput);
@@ -69,8 +81,8 @@ public class InputTransactionService {
             LocalDate stDate = LocalDate.parse(startDate, formatter);
             LocalDate edDate = LocalDate.parse(endDate, formatter);
             for (InputTransaction Data : existingProcess) {
-                if (Data.getUpdateDate().isAfter(stDate) && Data.getUpdateDate().isBefore(edDate)
-                        || Data.getUpdateDate().equals(stDate) || Data.getUpdateDate().equals(edDate)) {
+                if (Data.getJobDate().isAfter(stDate) && Data.getJobDate().isBefore(edDate)
+                        || Data.getJobDate().equals(stDate) || Data.getJobDate().equals(edDate)) {
                     dataList.add(Data);
                     transactionProcessDto.setProcessInputId(id);
                 }
@@ -99,8 +111,8 @@ public class InputTransactionService {
             LocalDate edDate = LocalDate.parse(endDate, formatter);
             List<InputTransaction> dateDataList = inputTransactionRepository.findByJobDateBetween(stDate,edDate);
             for(InputTransaction Data : dateDataList) {
-                if(Data.getUpdateDate().isAfter(stDate) && Data.getUpdateDate().isBefore(edDate)
-                        || Data.getUpdateDate().equals(stDate) || Data.getUpdateDate().equals(edDate)) {
+                if(Data.getJobDate().isAfter(stDate) && Data.getJobDate().isBefore(edDate)
+                        || Data.getJobDate().equals(stDate) || Data.getJobDate().equals(edDate)) {
                     dataList.add(Data);
                 }
             }
@@ -110,17 +122,21 @@ public class InputTransactionService {
         return null;
     }
 
-    //by ปีการศึกษาปัจจุบัน
-    public List<GraphDataDto> getTransactionByNow(Integer outputID) {
+    //ข้อมูลใต้กราฟ
+    public List<GraphDataDto> getGraphData(Integer outputID) {
         List<GraphDataDto> graphDataList = new ArrayList<>();
-        LocalDate ldn = LocalDate.now();
-        formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        Integer Month = ldn.getMonthValue();
-        Integer year = ldn.getYear();
-        if (Month >= 7) {
-            LocalDate startDate = LocalDate.of(year,8,1);
-            LocalDate endDate = LocalDate.of(year+1,7,31);
+        if(Month>=7) {
+            startDate = LocalDate.of(year, 7, 1);
+            endDate = LocalDate.of(year + 1, 6, 30);
+        }
+        else if(Month < 7) {
+            startDate = LocalDate.of(year - 1, 7, 1);
+            endDate = LocalDate.of(year, 6, 30);
+        }
             Optional<Output> outputsDetail = outputRepository.findById(outputID);
+            if(!outputsDetail.isPresent()){
+                return null;
+            }
             List<OutputInput> outputInputs = outputInputRepository.findByOutput(outputsDetail.get());
             for(OutputInput Dataa : outputInputs){
                 List<InputTransaction> data = inputTransactionRepository.findByProcessInputIdAndJobDateBetweenOrderByProcessInputIdAscJobDateAsc
@@ -140,57 +156,85 @@ public class InputTransactionService {
                 }
             }
             return graphDataList;
-        }
-        else if(Month < 7){
-            LocalDate startDate = LocalDate.of(year-1,8,1);
-            LocalDate endDate = LocalDate.of(year,7,31);
-            Optional<Output> outputsDetail = outputRepository.findById(outputID);
-            List<OutputInput> outputInputs = outputInputRepository.findByOutput(outputsDetail.get());
-            for(OutputInput Dataa : outputInputs) {
-                List<InputTransaction> data = inputTransactionRepository.findByProcessInputIdAndJobDateBetweenOrderByProcessInputIdAscJobDateAsc
-                        (Dataa.getInput().getId(), startDate,endDate);
-                for(InputTransaction Data : data){
-                    GraphDataDto graphDataDto = new GraphDataDto();
-                    graphDataDto.setValue(Data.getValue());
-                    graphDataDto.setJobDate(Data.getJobDate());
-                    graphDataDto.setUpdateDate(Data.getUpdateDate());
-                    graphDataDto.setUpdateName(Data.getUpdateBY());
-                    Optional<Input> dataInput = inputRepository.findById(Dataa.getInput().getId());
-                    graphDataDto.setInputName(dataInput.get().getDescription());
-                    Integer id = Integer.parseInt(Data.getUpdateBY());
-                    Optional<User> dataUser = userRepository.findById(id);
-                    graphDataDto.setUpdateName(dataUser.get().getName_user());
-                    graphDataList.add(graphDataDto);
-                }
-            }
-            return graphDataList;
-        }
-        return null;
     }
     public List<CheckInputDto2> getCheckInput(){
-        List<CheckInputDto2> checkInputDto2List = new ArrayList<>();
-        List<CheckInputDto1> checkInputDto1List = new ArrayList<>();
-        List<AgencyProcess> agencyProcess = agencyProcessRepository.findAll();
-        for(AgencyProcess dataAgencyProcess : agencyProcess){
-            List<ProcessInput> processInputDetail = processInputRepository.findByProcessId(dataAgencyProcess.getProcess().getId());
-            for(ProcessInput Data : processInputDetail){
-                List<InputTransaction> dataInput = inputTransactionRepository.findByProcessInputId(Data.getInput().getId());
-                for(InputTransaction Dataa : dataInput){
-                if(Dataa.getProcessInputId() != null) {
-                    CheckInputDto2 checkInputDto2 = new CheckInputDto2();
-                    CheckInputDto1 checkInputDto1 = new CheckInputDto1();
-                    checkInputDto1.setProcess(Data.getProcess().getDescription());
-                    checkInputDto1.setInput(Data.getInput().getDescription());
-                    checkInputDto1List.add(checkInputDto1);
-                    checkInputDto2.setAgency(dataAgencyProcess.getAgency().getName());
-                    checkInputDto2.setInputList(checkInputDto1List);
-                    checkInputDto2List.add(checkInputDto2);
-                }
-                }
-                return checkInputDto2List;
-
-            }
+       // LocalDate ldn = LocalDate.of(2020,6,20);   เอาไว้ Test case
+        if(Month>=7) {
+            startDate = LocalDate.of(year, 7, 1);
+            endDate = LocalDate.of(year + 1, 6, 30);
         }
-        return checkInputDto2List;
-    }
+        else if(Month < 7) {
+             startDate = LocalDate.of(year - 1, 7, 1);
+             endDate = LocalDate.of(year, 6, 30);
+        }
+        List<CheckInputDto2> checkInputDto2List = new ArrayList<>();;
+        List<Agency> agencyDetail = agencyRepository.findAll();
+            for (Agency DataAgency : agencyDetail) {
+                    List<CheckInputDto1> checkInputDto1List = new ArrayList<>();
+                    CheckInputDto2 checkInputDto2 = new CheckInputDto2();
+                    List<AgencyProcess> agencyProcesses = agencyProcessRepository.findByAgencyId(DataAgency.getId());
+                    for (AgencyProcess DataAgencyProcess : agencyProcesses) {
+                        if (DataAgencyProcess.getAgency().getId() == 6 && DataAgencyProcess.getProcess().getId() == 21) {
+                            List<Integer>  idList1 = new ArrayList<>();
+                            idList1.add(63);
+                            idList1.add(64);
+                            idList1.add(65);
+                            List<ProcessInput> dataListInputFix = processInputRepository.findByInputIdIn(idList1);
+                            for(ProcessInput dataInputFix : dataListInputFix){
+                                List<InputTransaction> inputTransactions = inputTransactionRepository.findByProcessInputIdAndJobDateBetween
+                                        (dataInputFix.getInput().getId(),startDate,endDate);
+                                Optional<InputTransaction> optionalInputTransaction = inputTransactions.stream().findFirst();
+                                if (!optionalInputTransaction.isPresent()) { //input ที่ไม่มีอยู่ใน Table Transaction
+                                    CheckInputDto1 checkInputDto1 = new CheckInputDto1();
+                                    checkInputDto2.setAgency(DataAgency.getName());
+                                    checkInputDto1.setProcess(dataInputFix.getProcess().getDescription());
+                                    checkInputDto1.setInput(dataInputFix.getInput());
+                                    checkInputDto1List.add(checkInputDto1);
+                                    checkInputDto2.setInputList(checkInputDto1List);
+                                }
+                            }
+                        } else if (DataAgencyProcess.getAgency().getId() == 7 && DataAgencyProcess.getProcess().getId() == 21) {
+                            List<Integer> idList2 = new ArrayList<>();
+                            idList2.add(66);
+                            idList2.add(67);
+                            idList2.add(68);
+                            List<ProcessInput> dataListInputFix = processInputRepository.findByInputIdIn(idList2);
+                            for(ProcessInput dataInputFix : dataListInputFix){
+                                List<InputTransaction> inputTransactions = inputTransactionRepository.findByProcessInputIdAndJobDateBetween
+                                        (dataInputFix.getInput().getId(),startDate,endDate);
+                                Optional<InputTransaction> optionalInputTransaction = inputTransactions.stream().findFirst();
+                                if (!optionalInputTransaction.isPresent()) { //input ที่ไม่มีอยู่ใน Table Transaction
+                                    CheckInputDto1 checkInputDto1 = new CheckInputDto1();
+                                    checkInputDto2.setAgency(DataAgency.getName());
+                                    checkInputDto1.setProcess(dataInputFix.getProcess().getDescription());
+                                    checkInputDto1.setInput(dataInputFix.getInput());
+                                    checkInputDto1List.add(checkInputDto1);
+                                    checkInputDto2.setInputList(checkInputDto1List);
+                                }
+                            }
+
+                        } else {
+                            List<ProcessInput> processInputs = processInputRepository.findByProcessId(DataAgencyProcess.getProcess().getId());
+                            for (ProcessInput DataProcessInput : processInputs) {
+                                List<InputTransaction> inputTransactions = inputTransactionRepository.findByProcessInputIdAndJobDateBetween
+                                        (DataProcessInput.getInput().getId(), startDate, endDate);
+                                // Convert List to Optional
+                                Optional<InputTransaction> optionalInputTransaction = inputTransactions.stream().findFirst();
+                                if (!optionalInputTransaction.isPresent()) { //input ที่ไม่มีอยู่ใน Table Transaction
+                                    CheckInputDto1 checkInputDto1 = new CheckInputDto1();
+                                    checkInputDto2.setAgency(DataAgency.getName());
+                                    checkInputDto1.setProcess(DataProcessInput.getProcess().getDescription());
+                                    checkInputDto1.setInput(DataProcessInput.getInput());
+                                    checkInputDto1List.add(checkInputDto1);
+                                    checkInputDto2.setInputList(checkInputDto1List);
+                                }
+
+                            }
+                        }
+                    }
+
+                    checkInputDto2List.add(checkInputDto2);
+            }
+            return checkInputDto2List;
+}
 }

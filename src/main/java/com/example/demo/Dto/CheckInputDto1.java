@@ -4,7 +4,7 @@ import com.example.demo.Model.Input;
 
 public class CheckInputDto1 {
     private String process;
-    private String input;
+    private Input input;
 
     public String getProcess() {
         return process;
@@ -14,11 +14,11 @@ public class CheckInputDto1 {
         this.process = process;
     }
 
-    public String getInput() {
+    public Input getInput() {
         return input;
     }
 
-    public void setInput(String input) {
+    public void setInput(Input input) {
         this.input = input;
     }
 }

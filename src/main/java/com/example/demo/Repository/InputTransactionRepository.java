@@ -16,6 +16,8 @@ import java.util.Optional;
 public interface InputTransactionRepository extends JpaRepository<InputTransaction,Integer> {
     List<InputTransaction>findByProcessInputId(Integer id);
     List<InputTransaction>findByJobDateBetween(LocalDate startDate, LocalDate endDate);
+    List<InputTransaction>findByProcessInputIdAndJobDateBetween(Integer processInputID,LocalDate startDate,LocalDate endDate);
     List<InputTransaction>findByProcessInputIdAndJobDateBetweenOrderByProcessInputIdAscJobDateAsc(Integer processInputID, LocalDate startDate, LocalDate endDate);
     Optional<InputTransaction> findById(Integer id);
+
 }

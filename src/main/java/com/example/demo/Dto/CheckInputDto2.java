@@ -2,9 +2,10 @@ package com.example.demo.Dto;
 
 import com.example.demo.Model.Agency;
 import com.example.demo.Model.Input;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CheckInputDto2 {
     private String agency;
     private List<CheckInputDto1> inputList;
