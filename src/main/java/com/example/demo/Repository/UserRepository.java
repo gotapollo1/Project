@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User,Integer> {
     List<User> findByRole(Integer id);
     Optional<User>findById(Integer userID);
+    List<User>findAllByOrderByRoleAsc();
 }

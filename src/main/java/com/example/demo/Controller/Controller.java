@@ -54,11 +54,13 @@ public class Controller {
     private NewsService newsService;
     @Autowired
     private OutputService outputService;
+    @Autowired
+    private ConfigurationService configurationService;
 
 
     @GetMapping("/user")
     public List<User> findAllUser() {
-        return userService.getAll();
+        return userRepository.findAllByOrderByRoleAsc();
     }
 
     @GetMapping("/userById")
@@ -199,6 +201,14 @@ public class Controller {
     @PostMapping("/addOutput")
     public Output addOutput(@RequestBody Output output){
         return outputService.addOutput(output);
+    }
+    @GetMapping("/changeValueConfig")
+    public Configuration changeValue (@RequestParam Integer check){
+        return configurationService.changeValue(check);
+    }
+    @GetMapping("/valueOpenClose")
+    public String getValueOpenClose(){
+        return configurationService.getValueOpenClose();
     }
 }
 

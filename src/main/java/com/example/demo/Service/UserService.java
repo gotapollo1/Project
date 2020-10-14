@@ -15,11 +15,7 @@ import java.util.Optional;
 public class UserService {
     @Autowired
     UserRepository userRepository;
-    private User user;
     private List<User> userList = new ArrayList<>();
-    public List<User> getAll(){
-    return userRepository.findAll();
-    }
 
     public User turnOff(Integer check) {
 
@@ -37,8 +33,6 @@ public class UserService {
                         userRepository.save(Data);
                     }
                 }
-                else
-                    return null;
             }
             return null;
         }

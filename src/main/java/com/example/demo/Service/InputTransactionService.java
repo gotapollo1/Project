@@ -157,6 +157,7 @@ public class InputTransactionService {
             }
             return graphDataList;
     }
+    // หน่วยงานที่ยังกรอก Input ไม่ครบในปีการศึกษาปัจจุบัน
     public List<CheckInputDto2> getCheckInput(){
        // LocalDate ldn = LocalDate.of(2020,6,20);   เอาไว้ Test case
         if(Month>=7) {
